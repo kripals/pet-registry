@@ -54,7 +54,7 @@ class Breed
         return $this;
     }
 
-    public function isDangerous(): ?bool
+    public function getIsDangerous(): ?bool
     {
         return $this->isDangerous;
     }

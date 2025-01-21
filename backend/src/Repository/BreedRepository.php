@@ -17,12 +17,37 @@ class BreedRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find breeds with optional filters.
+     *
+     * @param string|null $petType
+     * @param bool|null $isDangerous
+     * @return Breed[]
+     */
+    public function findBreeds(?string $petType, ?bool $isDangerous): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->join('b.petType', 'pt');
+
+        if ($petType !== null) {
+            $qb->andWhere('pt.type = :petType')
+               ->setParameter('petType', $petType);
+        }
+
+        if ($isDangerous !== null) {
+            $qb->andWhere('b.isDangerous = :isDangerous')
+               ->setParameter('isDangerous', $isDangerous);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
      * Find breeds by pet type ID.
      *
      * @param int $petTypeId
      * @return Breed[]
      */
-    public function findByPetTypeId(int $petTypeId): array
+    public function findByPetType(int $petTypeId): array
     {
         return $this->createQueryBuilder('b')
             ->andWhere('b.petType = :petTypeId')
