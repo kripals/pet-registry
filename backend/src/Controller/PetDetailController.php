@@ -10,6 +10,7 @@ use App\Entity\PetDetail;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Breed;
+use App\DTO\PetDetailDTO;
 
 final class PetDetailController extends AbstractController
 {
@@ -29,12 +30,13 @@ final class PetDetailController extends AbstractController
         $response = [];
 
         foreach ($pets as $pet) {
-            $response[] = [
-                'id' => $pet->getId(),
-                'name' => $pet->getName(),
-                'breed' => $pet->getBreed()->getBreedName(),
-                'age' => $pet->getAge(),
-            ];
+            $response[] = new PetDetailDTO(
+                $pet->getId(),
+                $pet->getName(),
+                $pet->getAge(),
+                $pet->getBreed()->getBreedName(),
+                $pet->getOwnerName()
+            );
         }
 
         return $this->json($response, JsonResponse::HTTP_OK);
@@ -49,12 +51,13 @@ final class PetDetailController extends AbstractController
             return $this->json(['message' => 'Pet not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $response = [
-            'id' => $pet->getId(),
-            'name' => $pet->getName(),
-            'breed' => $pet->getBreed()->getBreedName(),
-            'age' => $pet->getAge(),
-        ];
+        $response = new PetDetailDTO(
+            $pet->getId(),
+            $pet->getName(),
+            $pet->getAge(),
+            $pet->getBreed()->getBreedName(),
+            $pet->getOwnerName()
+        );
 
         return $this->json($response, JsonResponse::HTTP_OK);
     }
@@ -67,6 +70,8 @@ final class PetDetailController extends AbstractController
         $pet = new PetDetail();
         $pet->setName($data['name']);
         $pet->setAge($data['age']);
+        $pet->setGender($data['gender']);
+        $pet->setDob(new \DateTime($data['dob']));
         // Assuming you have a method to get the Breed entity by its ID
         $breed = $entityManager->getRepository(Breed::class)->find($data['breedId']);
         $pet->setBreed($breed);
@@ -90,6 +95,8 @@ final class PetDetailController extends AbstractController
 
         $pet->setName($data['name']);
         $pet->setAge($data['age']);
+        $pet->setGender($data['gender']);
+        $pet->setDob(new \DateTime($data['dob']));
         // Assuming you have a method to get the Breed entity by its ID
         $breed = $entityManager->getRepository(Breed::class)->find($data['breedId']);
         $pet->setBreed($breed);

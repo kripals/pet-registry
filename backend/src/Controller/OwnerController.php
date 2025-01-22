@@ -9,6 +9,7 @@ use App\Repository\OwnerRepository;
 use App\Entity\Owner;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
+use App\Dto\OwnerDto;
 
 final class OwnerController extends AbstractController
 {
@@ -25,18 +26,7 @@ final class OwnerController extends AbstractController
     public function getOwners(OwnerRepository $ownerRepository): JsonResponse
     {
         $owners = $ownerRepository->findAll();
-        $response = [];
-
-        foreach ($owners as $owner) {
-            $response[] = [
-                'id' => $owner->getId(),
-                'firstName' => $owner->getFirstName(),
-                'lastName' => $owner->getLastName(),
-                'email' => $owner->getEmail(),
-                'phoneNo' => $owner->getPhoneNo(),
-                'address' => $owner->getAddress(),
-            ];
-        }
+        $response = array_map(fn($owner) => $owner->toDto(), $owners);
 
         return $this->json($response, JsonResponse::HTTP_OK);
     }
@@ -50,16 +40,7 @@ final class OwnerController extends AbstractController
             return $this->json(['message' => 'Owner not found'], JsonResponse::HTTP_NOT_FOUND);
         }
 
-        $response = [
-            'id' => $owner->getId(),
-            'firstName' => $owner->getFirstName(),
-            'lastName' => $owner->getLastName(),
-            'email' => $owner->getEmail(),
-            'phoneNo' => $owner->getPhoneNo(),
-            'address' => $owner->getAddress(),
-        ];
-
-        return $this->json($response, JsonResponse::HTTP_OK);
+        return $this->json($owner->toDto(), JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/owners', name: 'create_owner', methods: ['POST'])]
@@ -77,7 +58,7 @@ final class OwnerController extends AbstractController
         $entityManager->persist($owner);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Owner created successfully'], JsonResponse::HTTP_CREATED);
+        return $this->json($owner->toDto(), JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/api/owners/{id}', name: 'update_owner', methods: ['PUT'])]
@@ -99,7 +80,7 @@ final class OwnerController extends AbstractController
 
         $entityManager->flush();
 
-        return $this->json(['message' => 'Owner updated successfully'], JsonResponse::HTTP_OK);
+        return $this->json($owner->toDto(), JsonResponse::HTTP_OK);
     }
 
     #[Route('/api/owners/{id}', name: 'delete_owner', methods: ['DELETE'])]

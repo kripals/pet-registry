@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\RegistrationRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Dto\RegistrationDTO;
 
 #[ORM\Entity(repositoryClass: RegistrationRepository::class)]
 class Registration
@@ -65,5 +66,15 @@ class Registration
         $this->registrationNo = $registrationNo;
 
         return $this;
+    }
+
+    public function toDto(): RegistrationDTO
+    {
+        return new RegistrationDTO(
+            $this->getId(),
+            $this->getRegistrationNo(),
+            $this->getPetDetail() ? $this->getPetDetail()->getId() : null,
+            $this->getOwner() ? $this->getOwner()->getId() : null
+        );
     }
 }

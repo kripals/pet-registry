@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PetDetailRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\DTO\PetDetailDTO;
 
 #[ORM\Entity(repositoryClass: PetDetailRepository::class)]
 class PetDetail
@@ -22,7 +23,9 @@ class PetDetail
     #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $dob = null;
 
-    // TODO: add name field
+    #[ORM\Column(type: 'string', length: 255)]
+    private ?string $name = null;
+
     // Getters and Setters
 
     public function getId(): ?int
@@ -64,5 +67,29 @@ class PetDetail
         $this->dob = $dob;
 
         return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): self
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+
+    public function toDTO(): PetDetailDTO
+    {
+        return new PetDetailDTO(
+            $this->id,
+            $this->name,
+            $this->age,
+            // Assuming breed and ownerName are properties of PetDetail
+            $this->breed ?? '', 
+            $this->ownerName ?? ''
+        );
     }
 }

@@ -33,7 +33,17 @@ final class RegistrationControllerTest extends WebTestCase
         $this->client->request('GET', '/api/registrations', [], [], ['HTTP_AUTHORIZATION' => 'Bearer ' . $token]);
 
         self::assertResponseIsSuccessful();
-        self::assertJson($this->client->getResponse()->getContent());
+        $responseContent = $this->client->getResponse()->getContent();
+        self::assertJson($responseContent);
+
+        $registrations = json_decode($responseContent, true);
+        self::assertIsArray($registrations);
+        foreach ($registrations as $registration) {
+            self::assertArrayHasKey('id', $registration);
+            self::assertArrayHasKey('registrationNo', $registration);
+            self::assertArrayHasKey('petDetailId', $registration);
+            self::assertArrayHasKey('ownerId', $registration);
+        }
     }
 
     public function testCreateRegistration(): void
@@ -46,7 +56,14 @@ final class RegistrationControllerTest extends WebTestCase
         ]));
 
         self::assertResponseStatusCodeSame(201);
-        self::assertJson($this->client->getResponse()->getContent());
+        $responseContent = $this->client->getResponse()->getContent();
+        self::assertJson($responseContent);
+
+        $registration = json_decode($responseContent, true);
+        self::assertArrayHasKey('id', $registration);
+        self::assertArrayHasKey('registrationNo', $registration);
+        self::assertArrayHasKey('petDetailId', $registration);
+        self::assertArrayHasKey('ownerId', $registration);
     }
 
     public function testDeleteRegistration(): void

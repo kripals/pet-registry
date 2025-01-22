@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\PetDetail;
 use App\Entity\Owner;
+use App\Dto\RegistrationDto;
 
 final class RegistrationController extends AbstractController
 {
@@ -30,12 +31,12 @@ final class RegistrationController extends AbstractController
         $response = [];
 
         foreach ($registrations as $registration) {
-            $response[] = [
-                'id' => $registration->getId(),
-                'registrationNo' => $registration->getRegistrationNo(),
-                'petDetail' => $registration->getPetDetail()->getId(),
-                'owner' => $registration->getOwner()->getId(),
-            ];
+            $response[] = new RegistrationDto(
+                $registration->getId(),
+                $registration->getRegistrationNo(),
+                $registration->getPetDetail()->getId(),
+                $registration->getOwner()->getId()
+            );
         }
 
         return $this->json($response, JsonResponse::HTTP_OK);
@@ -57,7 +58,12 @@ final class RegistrationController extends AbstractController
         $entityManager->persist($registration);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Registration created successfully'], JsonResponse::HTTP_CREATED);
+        return $this->json(new RegistrationDto(
+            $registration->getId(),
+            $registration->getRegistrationNo(),
+            $registration->getPetDetail()->getId(),
+            $registration->getOwner()->getId()
+        ), JsonResponse::HTTP_CREATED);
     }
 
     #[Route('/api/registrations/{id}', name: 'delete_registration', methods: ['DELETE'])]

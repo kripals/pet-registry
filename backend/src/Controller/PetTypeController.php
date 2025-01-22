@@ -9,6 +9,7 @@ use App\Repository\PetTypeRepository;
 use App\Entity\PetType;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
+use App\DTO\PetTypeDTO;
 
 final class PetTypeController extends AbstractController
 {
@@ -25,14 +26,7 @@ final class PetTypeController extends AbstractController
     public function getPetTypes(PetTypeRepository $petTypeRepository): JsonResponse
     {
         $petTypes = $petTypeRepository->findAll();
-        $response = [];
-
-        foreach ($petTypes as $petType) {
-            $response[] = [
-                'id' => $petType->getId(),
-                'name' => $petType->getName(),
-            ];
-        }
+        $response = array_map(fn($petType) => $petType->toDTO(), $petTypes);
 
         return $this->json($response, JsonResponse::HTTP_OK);
     }

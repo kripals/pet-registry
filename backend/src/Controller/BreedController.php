@@ -10,9 +10,20 @@ use App\Entity\Breed;
 use Symfony\Component\HttpFoundation\Request;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\PetType;
+use App\DTO\BreedDTO;
 
 final class BreedController extends AbstractController
 {
+    private function transformToDTO(Breed $breed): BreedDTO
+    {
+        return new BreedDTO(
+            $breed->getId(),
+            $breed->getBreedName(),
+            $breed->getIsDangerous(),
+            $breed->getPetType()->getType()
+        );
+    }
+
     #[Route('/api/breeds', name: 'get_breeds', methods: ['GET'])]
     public function getBreeds(Request $request, BreedRepository $breedRepository): JsonResponse
     {
@@ -33,15 +44,7 @@ final class BreedController extends AbstractController
             }
 
             // Format response
-            $response = [];
-            foreach ($breeds as $breed) {
-                $response[] = [
-                    'id' => $breed->getId(),
-                    'breedName' => $breed->getBreedName(),
-                    'isDangerous' => $breed->getIsDangerous(),
-                    'petType' => $breed->getPetType()->getType(),
-                ];
-            }
+            $response = array_map([$this, 'transformToDTO'], $breeds);
 
             return $this->json($response, JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
@@ -59,12 +62,7 @@ final class BreedController extends AbstractController
                 return $this->json(['message' => 'Breed not found'], JsonResponse::HTTP_NOT_FOUND);
             }
 
-            $response = [
-                'id' => $breed->getId(),
-                'breedName' => $breed->getBreedName(),
-                'isDangerous' => $breed->getIsDangerous(),
-                'petType' => $breed->getPetType()->getType(),
-            ];
+            $response = $this->transformToDTO($breed);
 
             return $this->json($response, JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
@@ -88,7 +86,7 @@ final class BreedController extends AbstractController
             $entityManager->persist($breed);
             $entityManager->flush();
 
-            return $this->json(['message' => 'Breed created successfully'], JsonResponse::HTTP_CREATED);
+            return $this->json($this->transformToDTO($breed), JsonResponse::HTTP_CREATED);
         } catch (\Exception $e) {
             return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
@@ -114,7 +112,7 @@ final class BreedController extends AbstractController
 
             $entityManager->flush();
 
-            return $this->json(['message' => 'Breed updated successfully'], JsonResponse::HTTP_OK);
+            return $this->json($this->transformToDTO($breed), JsonResponse::HTTP_OK);
         } catch (\Exception $e) {
             return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }

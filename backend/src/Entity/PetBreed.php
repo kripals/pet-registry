@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PetBreedRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\DTO\PetBreedDTO;
 
 #[ORM\Entity(repositoryClass: PetBreedRepository::class)]
 class PetBreed
@@ -50,5 +51,19 @@ class PetBreed
         $this->petDetail = $petDetail;
 
         return $this;
+    }
+
+    /**
+     * Convert PetBreed entity to DTO.
+     *
+     * @return PetBreedDTO
+     */
+    public function toDTO(): PetBreedDTO
+    {
+        return new PetBreedDTO(
+            $this->getId(),
+            $this->getBreed()->getId(),
+            $this->getPetDetail()->getId()
+        );
     }
 }
