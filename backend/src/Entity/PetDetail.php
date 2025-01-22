@@ -22,6 +22,7 @@ class PetDetail
     #[ORM\Column(type: 'date')]
     private ?\DateTimeInterface $dob = null;
 
+    // TODO: add name field
     // Getters and Setters
 
     public function getId(): ?int
