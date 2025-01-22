@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\BreedRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Dto\BreedDto;
 
 #[ORM\Entity(repositoryClass: BreedRepository::class)]
 class Breed
@@ -54,7 +55,7 @@ class Breed
         return $this;
     }
 
-    public function isDangerous(): ?bool
+    public function getIsDangerous(): ?bool
     {
         return $this->isDangerous;
     }
@@ -64,5 +65,14 @@ class Breed
         $this->isDangerous = $isDangerous;
 
         return $this;
+    }
+
+    public function toDto(): BreedDto
+    {
+        return new BreedDto(
+            $this->getId(),
+            $this->getBreedName(),
+            $this->getIsDangerous()
+        );
     }
 }

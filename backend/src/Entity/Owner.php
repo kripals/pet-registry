@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\OwnerRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\Dto\OwnerDto;
 
 #[ORM\Entity(repositoryClass: OwnerRepository::class)]
 class Owner
@@ -93,5 +94,17 @@ class Owner
         $this->address = $address;
 
         return $this;
+    }
+
+    public function toDto(): OwnerDto
+    {
+        return new OwnerDto(
+            $this->getId(),
+            $this->getFirstName(),
+            $this->getLastName(),
+            $this->getEmail(),
+            $this->getPhoneNo(),
+            $this->getAddress()
+        );
     }
 }

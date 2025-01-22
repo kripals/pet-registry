@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\PetTypeRepository;
 use Doctrine\ORM\Mapping as ORM;
+use App\DTO\PetTypeDTO;
 
 #[ORM\Entity(repositoryClass: PetTypeRepository::class)]
 class PetType
@@ -33,5 +34,10 @@ class PetType
         $this->type = $type;
 
         return $this;
+    }
+
+    public function toDTO(): PetTypeDTO
+    {
+        return new PetTypeDTO($this->getId(), $this->getType());
     }
 }
