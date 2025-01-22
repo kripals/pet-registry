@@ -3,3 +3,8 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+# TODO: Find out why jwt api/login route is not working and you need to define a route below
+api_login:
+    path: /api/login
+    controller: 'App\Controller\SecurityController::login'
+    methods: POST
