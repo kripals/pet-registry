@@ -4,39 +4,36 @@ namespace App\Entity;
 
 use App\Repository\OwnerRepository;
 use Doctrine\ORM\Mapping as ORM;
-use App\Dto\OwnerDto;
 
 #[ORM\Entity(repositoryClass: OwnerRepository::class)]
 class Owner
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer')]
     private ?int $id = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    private ?string $firstName = null;
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $firstName;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    private ?string $lastName = null;
+    #[ORM\Column(type: 'string', length: 50)]
+    private string $lastName;
 
-    #[ORM\Column(type: 'string', length: 255, unique: true)]
-    private ?string $email = null;
+    #[ORM\Column(type: 'string', length: 100)]
+    private string $email;
 
-    #[ORM\Column(type: 'string', length: 15)]
-    private ?string $phoneNo = null;
+    #[ORM\Column(type: 'string', length: 20)]
+    private string $phoneNo;
 
-    #[ORM\Column(type: 'text', nullable: true)]
+    #[ORM\Column(type: 'string', nullable: true)]
     private ?string $address = null;
-
-    // Getters and Setters
 
     public function getId(): ?int
     {
         return $this->id;
     }
 
-    public function getFirstName(): ?string
+    public function getFirstName(): string
     {
         return $this->firstName;
     }
@@ -44,11 +41,10 @@ class Owner
     public function setFirstName(string $firstName): self
     {
         $this->firstName = $firstName;
-
         return $this;
     }
 
-    public function getLastName(): ?string
+    public function getLastName(): string
     {
         return $this->lastName;
     }
@@ -56,11 +52,10 @@ class Owner
     public function setLastName(string $lastName): self
     {
         $this->lastName = $lastName;
-
         return $this;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -68,11 +63,10 @@ class Owner
     public function setEmail(string $email): self
     {
         $this->email = $email;
-
         return $this;
     }
 
-    public function getPhoneNo(): ?string
+    public function getPhoneNo(): string
     {
         return $this->phoneNo;
     }
@@ -80,7 +74,6 @@ class Owner
     public function setPhoneNo(string $phoneNo): self
     {
         $this->phoneNo = $phoneNo;
-
         return $this;
     }
 
@@ -92,19 +85,6 @@ class Owner
     public function setAddress(?string $address): self
     {
         $this->address = $address;
-
         return $this;
-    }
-
-    public function toDto(): OwnerDto
-    {
-        return new OwnerDto(
-            $this->getId(),
-            $this->getFirstName(),
-            $this->getLastName(),
-            $this->getEmail(),
-            $this->getPhoneNo(),
-            $this->getAddress()
-        );
     }
 }

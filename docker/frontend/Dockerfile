@@ -1,13 +1,19 @@
-FROM node:14
+FROM node:16-alpine
 
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package.json and package-lock.json
+COPY ./frontend/package.json ./
 
-RUN npm install
+# Install dependencies
+RUN npm install --legacy-peer-deps
 
+# Copy project files
 COPY . .
 
-EXPOSE 8080
+# Expose port
+EXPOSE 8081
 
+# Serve the Vue app
 CMD ["npm", "run", "serve"]

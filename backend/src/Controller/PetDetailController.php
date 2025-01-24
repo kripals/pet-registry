@@ -2,122 +2,186 @@
 
 namespace App\Controller;
 
+use App\Dto\PetDetailRequestDto;
+use App\Service\PetDetailService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\PetDetailRepository;
-use App\Entity\PetDetail;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Breed;
-use App\DTO\PetDetailDTO;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use App\Service\PetBreedService;
 
-final class PetDetailController extends AbstractController
+class PetDetailController extends AbstractController
 {
-    #[Route('/pet/detail', name: 'app_pet_detail')]
-    public function index(): JsonResponse
+    private PetDetailService $petDetailService;
+    private PetBreedService $petBreedService;
+    private ValidatorInterface $validator;
+
+    public function __construct(PetDetailService $petDetailService, PetBreedService $petBreedService, ValidatorInterface $validator)
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/PetDetailController.php',
-        ]);
+        $this->petDetailService = $petDetailService;
+        $this->petBreedService = $petBreedService;
+        $this->validator = $validator;
     }
 
-    #[Route('/api/pets', name: 'get_pets', methods: ['GET'])]
-    public function getPets(PetDetailRepository $petDetailRepository): JsonResponse
+    // Get all pet details
+    #[Route('/api/pet-details', name: 'get_pet_details', methods: ['GET'])]
+    public function getPetDetails(): JsonResponse
     {
-        $pets = $petDetailRepository->findAll();
-        $response = [];
-
-        foreach ($pets as $pet) {
-            $response[] = new PetDetailDTO(
-                $pet->getId(),
-                $pet->getName(),
-                $pet->getAge(),
-                $pet->getBreed()->getBreedName(),
-                $pet->getOwnerName()
-            );
+        try {
+            $petDetails = $this->petDetailService->getPetDetails();
+            return $this->json([
+                'success' => true,
+                'data' => $petDetails
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        return $this->json($response, JsonResponse::HTTP_OK);
     }
-
-    #[Route('/api/pets/{id}', name: 'get_pet', methods: ['GET'])]
-    public function getPet(int $id, PetDetailRepository $petDetailRepository): JsonResponse
+    
+    // Get a pet detail by id
+    #[Route('/api/pet-details/{id}', name: 'get_pet_detail', methods: ['GET'])]
+    public function getPetDetail(int $id): JsonResponse
     {
-        $pet = $petDetailRepository->find($id);
-
-        if (!$pet) {
-            return $this->json(['message' => 'Pet not found'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $petDetail = $this->petDetailService->getPetDetail($id);
+            return $this->json([
+                'success' => true,
+                'data' => $petDetail
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        $response = new PetDetailDTO(
-            $pet->getId(),
-            $pet->getName(),
-            $pet->getAge(),
-            $pet->getBreed()->getBreedName(),
-            $pet->getOwnerName()
-        );
-
-        return $this->json($response, JsonResponse::HTTP_OK);
     }
 
-    #[Route('/api/pets', name: 'create_pet', methods: ['POST'])]
-    public function createPet(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    // Create a pet detail
+    #[Route('/api/pet-details', name: 'create_pet_detail', methods: ['POST'])]
+    public function createPetDetail(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $pet = new PetDetail();
-        $pet->setName($data['name']);
-        $pet->setAge($data['age']);
-        $pet->setGender($data['gender']);
-        $pet->setDob(new \DateTime($data['dob']));
-        // Assuming you have a method to get the Breed entity by its ID
-        $breed = $entityManager->getRepository(Breed::class)->find($data['breedId']);
-        $pet->setBreed($breed);
-
-        $entityManager->persist($pet);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Pet created successfully'], JsonResponse::HTTP_CREATED);
-    }
-
-    #[Route('/api/pets/{id}', name: 'update_pet', methods: ['PUT'])]
-    public function updatePet(int $id, Request $request, PetDetailRepository $petDetailRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $pet = $petDetailRepository->find($id);
-
-        if (!$pet) {
-            return $this->json(['message' => 'Pet not found'], JsonResponse::HTTP_NOT_FOUND);
+        if (!isset($data['age'], $data['gender'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Fields "age" and "gender" are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
+        $dto = new PetDetailRequestDto($data['age'], $data['gender'], $data['dob'] ?? null);
+        $errors = $this->validator->validate($dto);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $petDetail = $this->petDetailService->createPetDetail($dto);
+
+            if (isset($data['breeds']) && is_array($data['breeds'])) {
+                try {
+                    $this->petBreedService->createPetBreeds($petDetail->getId(), $data['breeds']);
+                } catch (\Exception $e) {
+                return $this->json([
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            }
+
+            return $this->json([
+                'success' => true,
+                'data' => $petDetail
+            ], JsonResponse::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Update a pet detail
+    #[Route('/api/pet-details/{id}', name: 'update_pet_detail', methods: ['PUT'])]
+    public function updatePetDetail(int $id, Request $request): JsonResponse
+    {
         $data = json_decode($request->getContent(), true);
 
-        $pet->setName($data['name']);
-        $pet->setAge($data['age']);
-        $pet->setGender($data['gender']);
-        $pet->setDob(new \DateTime($data['dob']));
-        // Assuming you have a method to get the Breed entity by its ID
-        $breed = $entityManager->getRepository(Breed::class)->find($data['breedId']);
-        $pet->setBreed($breed);
-
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Pet updated successfully'], JsonResponse::HTTP_OK);
-    }
-
-    #[Route('/api/pets/{id}', name: 'delete_pet', methods: ['DELETE'])]
-    public function deletePet(int $id, PetDetailRepository $petDetailRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $pet = $petDetailRepository->find($id);
-
-        if (!$pet) {
-            return $this->json(['message' => 'Pet not found'], JsonResponse::HTTP_NOT_FOUND);
+        if (!isset($data['age'], $data['gender'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Fields "age" and "gender" are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $entityManager->remove($pet);
-        $entityManager->flush();
+        $dto = new PetDetailRequestDto($data['age'], $data['gender'], $data['dob'] ?? null);
+        $errors = $this->validator->validate($dto);
 
-        return $this->json(['message' => 'Pet deleted successfully'], JsonResponse::HTTP_OK);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $petDetail = $this->petDetailService->updatePetDetail($id, $dto);
+
+            if (isset($data['breeds']) && is_array($data['breeds'])) {
+                try {
+                    $this->petBreedService->createPetBreeds($petDetail->getId(), $data['breeds']);
+                } catch (\Exception $e) {
+                    return $this->json([
+                        'success' => false,
+                        'error' => $e->getMessage()
+                    ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+                }
+            }
+            return $this->json([
+                'success' => true,
+                'data' => $petDetail
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+    }
+
+    // Delete a pet detail
+    #[Route('/api/pet-details/{id}', name: 'delete_pet_detail', methods: ['DELETE'])]
+    public function deletePetDetail(int $id): JsonResponse
+    {
+        try {
+            $this->petDetailService->deletePetDetail($id);
+            return $this->json([
+                'success' => true,
+                'message' => 'Pet detail deleted successfully.'
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
     }
 }

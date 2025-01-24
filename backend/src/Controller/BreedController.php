@@ -2,138 +2,155 @@
 
 namespace App\Controller;
 
+use App\Dto\BreedRequestDto;
+use App\Dto\BreedResponseDto;
+use App\Service\BreedService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\BreedRepository;
-use App\Entity\Breed;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\PetType;
-use App\DTO\BreedDTO;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final class BreedController extends AbstractController
 {
-    private function transformToDTO(Breed $breed): BreedDTO
+    private BreedService $breedService;
+    private ValidatorInterface $validator;
+
+    public function __construct(BreedService $breedService, ValidatorInterface $validator)
     {
-        return new BreedDTO(
-            $breed->getId(),
-            $breed->getBreedName(),
-            $breed->getIsDangerous(),
-            $breed->getPetType()->getType()
-        );
+        $this->breedService = $breedService;
+        $this->validator = $validator;
     }
 
+    // Get all breeds
     #[Route('/api/breeds', name: 'get_breeds', methods: ['GET'])]
-    public function getBreeds(Request $request, BreedRepository $breedRepository): JsonResponse
+    public function getBreeds(): JsonResponse
     {
-        try {
-            // Not required fields
-            $petType = $request->query->get('petType');
-            $isDangerous = $request->query->get('isDangerous');
-
-            // Convert isDangerous to a boolean if provided
-            $isDangerous = $isDangerous !== null ? filter_var($isDangerous, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
-
-            // Fetch breeds with optional filters
-            $breeds = $breedRepository->findBreeds($petType, $isDangerous);
-
-            // Check if breeds were found
-            if (empty($breeds)) {
-                return $this->json(['message' => 'No breeds found'], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            // Format response
-            $response = array_map([$this, 'transformToDTO'], $breeds);
-
-            return $this->json($response, JsonResponse::HTTP_OK);
-        } catch (\Exception $e) {
-            return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
-        }
+        $breeds = $this->breedService->getAllBreeds();
+        return $this->json([
+            'success' => true,
+            'data' => $breeds
+        ]);
     }
 
+    // Get a breed by id
     #[Route('/api/breeds/{id}', name: 'get_breed', methods: ['GET'])]
-    public function getBreed(int $id, BreedRepository $breedRepository): JsonResponse
+    public function getBreed(int $id): JsonResponse
     {
         try {
-            $breed = $breedRepository->find($id);
-
-            if (!$breed) {
-                return $this->json(['message' => 'Breed not found'], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            $response = $this->transformToDTO($breed);
-
-            return $this->json($response, JsonResponse::HTTP_OK);
+            $breed = $this->breedService->getBreed($id);
+            return $this->json([
+                'success' => true,
+                'data' => $breed
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
     }
 
+    // Create a breed
     #[Route('/api/breeds', name: 'create_breed', methods: ['POST'])]
-    public function createBreed(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function createBreed(Request $request): JsonResponse
     {
+        $data = json_decode($request->getContent(), true);
+
+        // Validate input data
+        if (!isset($data['breed_name'], $data['is_dangerous'], $data['pet_type_id'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'All fields (breed_name, is_dangerous, pet_type_id) are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $dto = new BreedRequestDto($data['breed_name'], $data['is_dangerous'], $data['pet_type_id']);
+        $errors = $this->validator->validate($dto);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
         try {
-            $data = json_decode($request->getContent(), true);
-
-            $breed = new Breed();
-            $breed->setBreedName($data['breedName']);
-            $breed->setIsDangerous($data['isDangerous']);
-            // Assuming you have a method to get the PetType entity by its ID
-            $petType = $entityManager->getRepository(PetType::class)->find($data['petTypeId']);
-            $breed->setPetType($petType);
-
-            $entityManager->persist($breed);
-            $entityManager->flush();
-
-            return $this->json($this->transformToDTO($breed), JsonResponse::HTTP_CREATED);
+            $breed = $this->breedService->createBreed($dto);
+            return $this->json([
+                'success' => true,
+                'data' => $breed
+            ], JsonResponse::HTTP_CREATED);
         } catch (\Exception $e) {
-            return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
+    // Update a breed
     #[Route('/api/breeds/{id}', name: 'update_breed', methods: ['PUT'])]
-    public function updateBreed(int $id, Request $request, BreedRepository $breedRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function updateBreed(int $id, Request $request): JsonResponse
     {
-        try {
-            $breed = $breedRepository->find($id);
+        $data = json_decode($request->getContent(), true);
 
-            if (!$breed) {
-                return $this->json(['message' => 'Breed not found'], JsonResponse::HTTP_NOT_FOUND);
+        if (!isset($data['breed_name'], $data['is_dangerous'], $data['pet_type_id'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'All fields (breed_name, is_dangerous, pet_type_id) are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $dto = new BreedRequestDto($data['breed_name'], $data['is_dangerous'], $data['pet_type_id']);
+        $errors = $this->validator->validate($dto);
+
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
             }
 
-            $data = json_decode($request->getContent(), true);
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
-            $breed->setBreedName($data['breedName']);
-            $breed->setIsDangerous($data['isDangerous']);
-            // Assuming you have a method to get the PetType entity by its ID
-            $petType = $entityManager->getRepository(PetType::class)->find($data['petTypeId']);
-            $breed->setPetType($petType);
-
-            $entityManager->flush();
-
-            return $this->json($this->transformToDTO($breed), JsonResponse::HTTP_OK);
+        try {
+            $breed = $this->breedService->updateBreed($id, $dto);
+            return $this->json([
+                'success' => true,
+                'data' => $breed
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
+    // Delete a breed
     #[Route('/api/breeds/{id}', name: 'delete_breed', methods: ['DELETE'])]
-    public function deleteBreed(int $id, BreedRepository $breedRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteBreed(int $id): JsonResponse
     {
         try {
-            $breed = $breedRepository->find($id);
-
-            if (!$breed) {
-                return $this->json(['message' => 'Breed not found'], JsonResponse::HTTP_NOT_FOUND);
-            }
-
-            $entityManager->remove($breed);
-            $entityManager->flush();
-
-            return $this->json(['message' => 'Breed deleted successfully'], JsonResponse::HTTP_OK);
+            $this->breedService->deleteBreed($id);
+            return $this->json([
+                'success' => true,
+                'message' => 'Breed deleted successfully'
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['message' => 'An error occurred', 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 }

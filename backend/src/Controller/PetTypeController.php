@@ -2,61 +2,94 @@
 
 namespace App\Controller;
 
+use App\Dto\PetTypeRequestDto;
+use App\Service\PetTypeService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\PetTypeRepository;
-use App\Entity\PetType;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use App\DTO\PetTypeDTO;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class PetTypeController extends AbstractController
+class PetTypeController extends AbstractController
 {
-    #[Route('/pet/type', name: 'app_pet_type')]
-    public function index(): JsonResponse
+    private PetTypeService $petTypeService;
+    private ValidatorInterface $validator;
+
+    public function __construct(PetTypeService $petTypeService, ValidatorInterface $validator)
     {
+        $this->petTypeService = $petTypeService;
+        $this->validator = $validator;
+    }
+
+    // Get all pet types
+    #[Route('/api/pet-types', name: 'get_pet_types', methods: ['GET'])]
+    public function getPetTypes(): JsonResponse
+    {
+        $petTypes = $this->petTypeService->getAllPetTypes();
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/PetTypeController.php',
+            'success' => true,
+            'data' => $petTypes
         ]);
     }
 
-    #[Route('/api/pet-types', name: 'get_pet_types', methods: ['GET'])]
-    public function getPetTypes(PetTypeRepository $petTypeRepository): JsonResponse
+    // Get a pet type by id
+    #[Route('/api/pet-types/{id}', name: 'get_pet_type', methods: ['GET'])]
+    public function getPetType(int $id): JsonResponse
     {
-        $petTypes = $petTypeRepository->findAll();
-        $response = array_map(fn($petType) => $petType->toDTO(), $petTypes);
-
-        return $this->json($response, JsonResponse::HTTP_OK);
+        try {
+            $petType = $this->petTypeService->getPetType($id);
+            return $this->json([
+                'success' => true,
+                'data' => $petType
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
     }
 
+    // Create a pet type
     #[Route('/api/pet-types', name: 'create_pet_type', methods: ['POST'])]
-    public function createPetType(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function createPetType(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        $petType = new PetType();
-        $petType->setName($data['name']);
-
-        $entityManager->persist($petType);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Pet type created successfully'], JsonResponse::HTTP_CREATED);
-    }
-
-    #[Route('/api/pet-types/{id}', name: 'delete_pet_type', methods: ['DELETE'])]
-    public function deletePetType(int $id, PetTypeRepository $petTypeRepository, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $petType = $petTypeRepository->find($id);
-
-        if (!$petType) {
-            return $this->json(['message' => 'Pet type not found'], JsonResponse::HTTP_NOT_FOUND);
+        // Validate input data
+        if (!isset($data['type'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'The "type" field is required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $entityManager->remove($petType);
-        $entityManager->flush();
+        $dto = new PetTypeRequestDto($data['type']);
+        $errors = $this->validator->validate($dto);
 
-        return $this->json(['message' => 'Pet type deleted successfully'], JsonResponse::HTTP_OK);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $petType = $this->petTypeService->createPetType($dto);
+            return $this->json([
+                'success' => true,
+                'data' => $petType
+            ], JsonResponse::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
     }
 }

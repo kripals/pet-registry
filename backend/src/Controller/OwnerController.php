@@ -2,99 +2,102 @@
 
 namespace App\Controller;
 
+use App\Dto\OwnerRequestDto;
+use App\Service\OwnerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\OwnerRepository;
-use App\Entity\Owner;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Dto\OwnerDto;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-final class OwnerController extends AbstractController
+class OwnerController extends AbstractController
 {
-    #[Route('/owner', name: 'app_owner')]
-    public function index(): JsonResponse
+    private OwnerService $ownerService;
+    private ValidatorInterface $validator;
+
+    public function __construct(OwnerService $ownerService, ValidatorInterface $validator)
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/OwnerController.php',
-        ]);
+        $this->ownerService = $ownerService;
+        $this->validator = $validator;
     }
 
+    // Get all owners
     #[Route('/api/owners', name: 'get_owners', methods: ['GET'])]
-    public function getOwners(OwnerRepository $ownerRepository): JsonResponse
+    public function getOwners(): JsonResponse
     {
-        $owners = $ownerRepository->findAll();
-        $response = array_map(fn($owner) => $owner->toDto(), $owners);
-
-        return $this->json($response, JsonResponse::HTTP_OK);
+        $owners = $this->ownerService->getOwners();
+        return $this->json(['success' => true, 'data' => $owners]);
     }
 
+    // Get an owner by id
     #[Route('/api/owners/{id}', name: 'get_owner', methods: ['GET'])]
-    public function getOwner(int $id, OwnerRepository $ownerRepository): JsonResponse
+    public function getOwner(int $id): JsonResponse
     {
-        $owner = $ownerRepository->find($id);
-
-        if (!$owner) {
-            return $this->json(['message' => 'Owner not found'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $owner = $this->ownerService->getOwner($id);
+            return $this->json(['success' => true, 'data' => $owner]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        return $this->json($owner->toDto(), JsonResponse::HTTP_OK);
     }
 
+    // Create an owner
     #[Route('/api/owners', name: 'create_owner', methods: ['POST'])]
-    public function createOwner(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    public function createOwner(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+        $dto = new OwnerRequestDto($data['firstName'], $data['lastName'], $data['email'], $data['phoneNo'], $data['address'] ?? null);
 
-        $owner = new Owner();
-        $owner->setFirstName($data['firstName']);
-        $owner->setLastName($data['lastName']);
-        $owner->setEmail($data['email']);
-        $owner->setPhoneNo($data['phoneNo']);
-        $owner->setAddress($data['address']);
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+        }
 
-        $entityManager->persist($owner);
-        $entityManager->flush();
-
-        return $this->json($owner->toDto(), JsonResponse::HTTP_CREATED);
+        try {
+            $owner = $this->ownerService->createOwner($dto);
+            return $this->json(['success' => true, 'data' => $owner], JsonResponse::HTTP_CREATED);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+        }
     }
 
+    // Update an owner
     #[Route('/api/owners/{id}', name: 'update_owner', methods: ['PUT'])]
-    public function updateOwner(int $id, Request $request, OwnerRepository $ownerRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function updateOwner(int $id, Request $request): JsonResponse
     {
-        $owner = $ownerRepository->find($id);
+        $data = json_decode($request->getContent(), true);
+        $dto = new OwnerRequestDto($data['firstName'], $data['lastName'], $data['email'], $data['phoneNo'], $data['address'] ?? null);
 
-        if (!$owner) {
-            return $this->json(['message' => 'Owner not found'], JsonResponse::HTTP_NOT_FOUND);
+        $errors = $this->validator->validate($dto);
+        if (count($errors) > 0) {
+            $errorMessages = [];
+            foreach ($errors as $error) {
+                $errorMessages[] = $error->getMessage();
+            }
+            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $data = json_decode($request->getContent(), true);
-
-        $owner->setFirstName($data['firstName']);
-        $owner->setLastName($data['lastName']);
-        $owner->setEmail($data['email']);
-        $owner->setPhoneNo($data['phoneNo']);
-        $owner->setAddress($data['address']);
-
-        $entityManager->flush();
-
-        return $this->json($owner->toDto(), JsonResponse::HTTP_OK);
+        try {
+            $owner = $this->ownerService->updateOwner($id, $dto);
+            return $this->json(['success' => true, 'data' => $owner]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+        }
     }
 
+    // Delete an owner
     #[Route('/api/owners/{id}', name: 'delete_owner', methods: ['DELETE'])]
-    public function deleteOwner(int $id, OwnerRepository $ownerRepository, EntityManagerInterface $entityManager): JsonResponse
+    public function deleteOwner(int $id): JsonResponse
     {
-        $owner = $ownerRepository->find($id);
-
-        if (!$owner) {
-            return $this->json(['message' => 'Owner not found'], JsonResponse::HTTP_NOT_FOUND);
+        try {
+            $this->ownerService->deleteOwner($id);
+            return $this->json(['success' => true, 'message' => 'Owner deleted successfully']);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }
-
-        $entityManager->remove($owner);
-        $entityManager->flush();
-
-        return $this->json(['message' => 'Owner deleted successfully'], JsonResponse::HTTP_OK);
     }
 }
