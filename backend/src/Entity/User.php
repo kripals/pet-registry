@@ -71,7 +71,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getUserIdentifier(): string
     {
-        // This replaces getUsername() in Symfony 5+
         return $this->email;
     }
 

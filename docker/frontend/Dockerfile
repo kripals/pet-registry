@@ -4,13 +4,13 @@ FROM node:23.6.1-alpine
 WORKDIR /app
 
 # Copy package.json
-COPY ./frontend/package*.json ./
+COPY ./frontend/package.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy project files
-COPY ./frontend ./
+COPY . .
 
 # Expose port
 EXPOSE 5173
