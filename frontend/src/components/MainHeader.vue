@@ -25,7 +25,13 @@
 </template>
 
 <script>
-export default {
-  name: 'MainHeader',
-}
+  import logo from '../assets/logo.png'
+  export default {
+    name: 'MainHeader',
+    data() {
+      return {
+        logo
+      }
+    }
+  }
 </script>
