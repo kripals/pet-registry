@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use App\Repository\BreedRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -23,6 +25,14 @@ class Breed
     #[ORM\JoinColumn(nullable: false)]
     private PetType $petType;
 
+    #[ORM\ManyToMany(targetEntity: PetDetail::class, mappedBy: 'petDetailBreeds')]
+    private Collection $petDetails;
+
+    public function __construct()
+    {
+        $this->petDetails = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -36,7 +46,6 @@ class Breed
     public function setBreedName(string $breedName): self
     {
         $this->breedName = $breedName;
-
         return $this;
     }
 
@@ -48,7 +57,6 @@ class Breed
     public function setIsDangerous(bool $isDangerous): self
     {
         $this->isDangerous = $isDangerous;
-
         return $this;
     }
 
@@ -60,6 +68,32 @@ class Breed
     public function setPetType(PetType $petType): self
     {
         $this->petType = $petType;
+        return $this;
+    }
+
+    /**
+     * @return Collection|PetDetail[]
+     */
+    public function getPetDetails(): Collection
+    {
+        return $this->petDetails;
+    }
+
+    public function addPetDetail(PetDetail $petDetail): self
+    {
+        if (!$this->petDetails->contains($petDetail)) {
+            $this->petDetails[] = $petDetail;
+            $petDetail->addPetDetailBreed($this);
+        }
+
+        return $this;
+    }
+
+    public function removePetDetail(PetDetail $petDetail): self
+    {
+        if ($this->petDetails->removeElement($petDetail)) {
+            $petDetail->removePetDetailBreed($this);
+        }
 
         return $this;
     }

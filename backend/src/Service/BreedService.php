@@ -51,6 +51,27 @@ class BreedService
         );
     }
 
+    public function getBreedsByPetType(int $petTypeId): array
+    {
+        $petType = $this->entityManager->getRepository(PetType::class)->find($petTypeId);
+        if (!$petType) {
+            throw new \Exception('Invalid pet type');
+        }
+
+        $breeds = $this->breedRepository->findBy(['petType' => $petType]);
+        $response = [];
+        foreach ($breeds as $breed) {
+            $response[] = new BreedResponseDto(
+                $breed->getId(),
+                $breed->getBreedName(),
+                $breed->isDangerous(),
+                $petType->getType()
+            );
+        }
+
+        return $response;
+    }
+
     public function createBreed(BreedRequestDto $Dto): BreedResponseDto
     {
         $petType = $this->entityManager->getRepository(PetType::class)->find($Dto->petTypeId);

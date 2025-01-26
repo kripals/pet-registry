@@ -19,6 +19,7 @@ class PetDetailService
     public function createPetDetail(PetDetailRequestDto $dto): PetDetailResponseDto
     {
         $petDetail = new PetDetail();
+        $petDetail->setName($dto->name);
         $petDetail->setAge($dto->age);
         $petDetail->setGender($dto->gender);
         $petDetail->setDob($dto->dob ? new \DateTime($dto->dob) : null);
@@ -26,7 +27,7 @@ class PetDetailService
         $this->entityManager->persist($petDetail);
         $this->entityManager->flush();
 
-        return new PetDetailResponseDto($petDetail->getId(), $petDetail->getAge(), $petDetail->getGender(), $dto->dob);
+        return new PetDetailResponseDto($petDetail->getName(), $petDetail->getId(), $petDetail->getAge(), $petDetail->getGender(), $dto->dob);
     }
 
     public function getPetDetails(): array
@@ -36,6 +37,7 @@ class PetDetailService
         return array_map(
             fn(PetDetail $petDetail) => new PetDetailResponseDto(
                 $petDetail->getId(),
+                $petDetail->getName(),
                 $petDetail->getAge(),
                 $petDetail->getGender(),
                 $petDetail->getDob()?->format('Y-m-d')
@@ -54,6 +56,7 @@ class PetDetailService
 
         return new PetDetailResponseDto(
             $petDetail->getId(),
+            $petDetail->getName(),
             $petDetail->getAge(),
             $petDetail->getGender(),
             $petDetail->getDob()?->format('Y-m-d')
@@ -68,6 +71,7 @@ class PetDetailService
             throw new \Exception('Pet detail not found');
         }
 
+        $petDetail->setName($dto->name);
         $petDetail->setAge($dto->age);
         $petDetail->setGender($dto->gender);
         $petDetail->setDob($dto->dob ? new \DateTime($dto->dob) : null);
@@ -76,6 +80,7 @@ class PetDetailService
 
         return new PetDetailResponseDto(
             $petDetail->getId(),
+            $petDetail->getName(),
             $petDetail->getAge(),
             $petDetail->getGender(),
             $petDetail->getDob()?->format('Y-m-d')

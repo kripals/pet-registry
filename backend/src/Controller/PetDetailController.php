@@ -73,7 +73,7 @@ class PetDetailController extends AbstractController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $dto = new PetDetailRequestDto($data['age'], $data['gender'], $data['dob'] ?? null);
+        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['gender'], $data['dob'] ?? null);
         $errors = $this->validator->validate($dto);
 
         if (count($errors) > 0) {
@@ -127,7 +127,7 @@ class PetDetailController extends AbstractController
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
-        $dto = new PetDetailRequestDto($data['age'], $data['gender'], $data['dob'] ?? null);
+        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['gender'], $data['dob'] ?? null);
         $errors = $this->validator->validate($dto);
 
         if (count($errors) > 0) {

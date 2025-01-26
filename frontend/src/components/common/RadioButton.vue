@@ -1,7 +1,14 @@
 <template>
     <div>
-      <input :type="type" :name="name" :id="id" class="m-2" :value="value" />
-      <label :for="id">{{ label }}</label>
+        <input
+            type="radio"
+            :id="id"
+            :name="name"
+            :value="value"
+            :checked="modelValue === value"
+            @change="$emit('update:modelValue', value)"
+        />
+        <label :for="id">{{ label }}</label>
     </div>
 </template>
 
@@ -9,14 +16,11 @@
 export default {
     name: 'RadioButton',
     props: {
-        label: String,
-        type: {
-            type: String,
-            default: 'radio'
-        },
-        name: String,
         id: String,
-        value: String
+        name: String,
+        value: String,
+        label: String,
+        modelValue: String
     }
 }
 </script>

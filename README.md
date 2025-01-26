@@ -9,3 +9,6 @@ for the backend
     - run "php bin/console doctrine:fixtures:load" to seed the tables
 
 
+Future changes
+    - Registration can be converted register many different types of pet type (.i.e cats, birds, etc)
+    - Need to make the age a float, functions are already there to support it

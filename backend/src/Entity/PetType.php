@@ -26,6 +26,13 @@ class PetType
         return $this->type;
     }
 
+    public function setId(?int $id): self
+    {
+        $this->id = $id;
+
+        return $this;
+    }
+
     public function setType(string $type): self
     {
         $this->type = $type;

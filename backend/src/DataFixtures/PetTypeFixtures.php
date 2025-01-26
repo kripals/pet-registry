@@ -14,6 +14,7 @@ class PetTypeFixtures extends Fixture
 
         foreach ($petTypes as $type) {
             $petType = new PetType();
+            $petType->setId(array_search($type, $petTypes) + 1);
             $petType->setType($type);
             $manager->persist($petType);
 

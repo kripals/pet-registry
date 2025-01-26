@@ -7,21 +7,46 @@ use Symfony\Component\Validator\Constraints as Assert;
 class PetDetailRequestDto
 {
     #[Assert\NotBlank]
-    #[Assert\Type('integer')]
-    #[Assert\GreaterThanOrEqual(0)]
-    public int $age;
+    #[Assert\Type('string')]
+    private $name;
 
     #[Assert\NotBlank]
-    #[Assert\Choice(choices: ['Male', 'Female', 'Other'], message: 'Invalid gender')]
-    public string $gender;
+    #[Assert\Type('float')]
+    private $age;
 
-    #[Assert\DateTime]
-    public ?string $dob;
+    #[Assert\NotBlank]
+    #[Assert\Choice(choices: ['male', 'female'], message: 'Choose a valid gender.')]
+    private $gender;
 
-    public function __construct(int $age, string $gender, ?string $dob)
+    #[Assert\NotBlank]
+    #[Assert\Date]
+    private $dob;
+
+    public function __construct(string $name, float $age, string $gender, string $dob)
     {
+        $this->name = $name;
         $this->age = $age;
         $this->gender = $gender;
         $this->dob = $dob;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getAge(): float
+    {
+        return $this->age;
+    }
+
+    public function getGender(): string
+    {
+        return $this->gender;
+    }
+
+    public function getDob(): string
+    {
+        return $this->dob;
     }
 }

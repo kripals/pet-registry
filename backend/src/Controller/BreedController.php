@@ -51,6 +51,24 @@ final class BreedController extends AbstractController
         }
     }
 
+    // Get breeds by pet type id
+    #[Route('/api/breeds/pet-types/{petTypeId}', name: 'get_breeds_by_pet_type', methods: ['GET'])]
+    public function getBreedsByPetType(int $petTypeId): JsonResponse
+    {
+        try {
+            $breeds = $this->breedService->getBreedsByPetType($petTypeId);
+            return $this->json([
+                'success' => true,
+                'data' => $breeds
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
+        }
+    }
+
     // Create a breed
     #[Route('/api/breeds', name: 'create_breed', methods: ['POST'])]
     public function createBreed(Request $request): JsonResponse
