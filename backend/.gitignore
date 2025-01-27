@@ -1,5 +1,6 @@
 
 ###> symfony/framework-bundle ###
+/.env
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -17,3 +18,44 @@
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+###> nelmio/cors-bundle ###
+/.php_cs.cache
+###< nelmio/cors-bundle ###
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+###< symfony/webpack-encore-bundle ###
+
+###> symfony/maker-bundle ###
+/.php_cs.cache
+###< symfony/maker-bundle ###
+
+###> symfony/phpunit-bridge ###
+/.phpunit
+/phpunit.xml
+/phpunit.xsd
+###< symfony/phpunit-bridge ###
+
+###> symfony/web-server-bundle ###
+/.web-server-bundle
+###< symfony/web-server-bundle ###
+
+###> symfony/twig-bundle ###
+/var/cache/*
+!var/cache/.gitkeep
+###< symfony/twig-bundle ###
+
+###> symfony/monolog-bundle ###
+/var/log/*
+!var/log/.gitkeep
+###< symfony/monolog-bundle ###
+
+###> symfony/swiftmailer-bundle ###
+/var/spool/*
+!var/spool/.gitkeep
+###< symfony/swiftmailer-bundle ###
+
+# macOS
+.DS_Store

@@ -10,7 +10,7 @@ export default {
     props: {
         buttonClass: {
             type: String,
-            default: 'text-sm font-medium text-indigo-600 hover:text-indigo-500'
+            default: 'text-sm font-medium text-docublue-100 hover:text-indigo-500'
         }
     },
     methods: {

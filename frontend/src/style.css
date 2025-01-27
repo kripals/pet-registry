@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+.bg-docublue-100 {
+  background-color: #06aeef;
+}
+
+.bg-docublue-200 {
+  background-color: #003c75;
+}
+
+.text-docublue-100 {
+  color: #06aeef;
+}
+
+.text-docublue-200 {
+  color: #003c75;
+}

@@ -1,7 +1,7 @@
 <template>
-    <div class="mt-4">
-        <label :for="id" class="block text-sm font-medium text-gray-700">{{ label }}</label>
-        <input type="number" :id="id" v-model="modelValue" :min="min" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+    <div>
+        <label :for="id" class="block text-md">{{ label }}</label>
+        <input type="number" :id="id" :value="modelValue" :min="min" class="mt-2 border-r block w-full rounded-md bg-white px-3 py-1.5 pr-3 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6 h-10" />
     </div>
 </template>
 

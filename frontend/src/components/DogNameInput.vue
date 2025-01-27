@@ -1,5 +1,5 @@
 <template>
-  <TextInput label="What is your dog's name?" v-model="dogName" id="dogName" />
+  <TextInput label="What is your dog's name?" v-model="dogName" id="dogName" placeholder="Monte"/>
 </template>
 
 <script>

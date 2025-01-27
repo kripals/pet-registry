@@ -7,18 +7,22 @@
                 <img class="h-8 w-auto" :src="logo" alt="Docupet Logo" />
             </a>
         </div>
-        <div class="flex space-x-4">
-            <router-link to="/" class="text-sm font-medium text-gray-700 hover:text-gray-900">Home</router-link>
-            <router-link to="/register" class="text-sm font-medium text-gray-700 hover:text-gray-900">Register</router-link>
-        </div>
         <div class="flex flex-1 justify-end">
-            <CommonButton @click="logout">Logout</CommonButton>
+            <div class="space-x-4" v-if="token">
+                <router-link to="/" class="text-sm font-medium text-gray-700 hover:text-gray-900">Home</router-link>
+                <router-link to="/register" class="text-sm font-medium text-gray-700 hover:text-gray-900">Register</router-link>
+                <CommonButton @click="logout">Logout</CommonButton>
+            </div>
+            <div class="space-x-4" v-else>
+                <router-link to="/login" class="text-sm font-medium text-gray-700 hover:text-gray-900">Login</router-link>
+            </div>
         </div>
       </div>
     </nav>
 </template>
 
 <script>
+import { computed } from "vue";
 import logo from '../assets/logo.png';
 import CommonButton from './common/CommonButton.vue';
 
@@ -35,6 +39,12 @@ export default {
     data() {
         return {
             logo
+        }
+    },
+    computed: {
+        // get toke from local storage
+        token() {
+            return localStorage.getItem('token');
         }
     }
 }

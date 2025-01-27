@@ -1,29 +1,25 @@
 <template>
-  <div class="bg-gray-100 h-screen">
-    <div class="mt-10 lg:w-1/2 w-full mx-auto px-4">
-      <div class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow">
-        <div class="px-4 py-5 sm:px-8">
-          Registration for new dog
+  <div class="bg-gray-100 min-h-screen pt-10">
+    <div class="lg:w-1/2 w-full mx-auto px-4">
+      <div class="overflow-hidden rounded-lg bg-white shadow px-5">
+        <div class="p-4 sm:px-8">
+          <img :src="paws" alt="Paws" class="w-full" />
+          <h2 class="text-2xl font-semibold text-blue-900">Tell us about your dog.</h2>
         </div>
-        
-        <div class="px-4 py-5 sm:p-8">
-          <div>
-            <h2 class="text-lg/6 font-semibold text-gray-900">Tell us about your dog.</h2>
-          </div>
-          <form @submit.prevent="registerPet">
+
+        <div class="p-4 sm:p-8 sm:py-3">
+          <form @submit.prevent="registerPet" class="space-y-4">
             <DogNameInput v-model="name" />
             <BreedSelector v-model="breed" />
             <GenderSelector v-model="gender" />
-
-            <div class="mt-4">
+            <div>
               <label class="block text-sm font-medium text-gray-700">
-                <input type="checkbox" v-model="knowsDob" @change="toggleDobField" />
+                <input type="checkbox" v-model="knowsDob" @change="toggleDobField" class="mt-1" />
                 I know my dog's date of birth
               </label>
             </div>
             <DateInput id="dob" label="Date of Birth" v-model="dob" :disabled="!knowsDob" />
             <NumberInput id="age" label="Approximate Age" v-model="age" :min="0" />
-            
             <OwnerSelector v-model="owner" />
             <SubmitButton label="Continue" />
           </form>
@@ -44,6 +40,7 @@ import DateInput from "./common/DateInput.vue";
 import NumberInput from "./common/NumberInput.vue";
 import { apiFetch } from '../utils/api'; // Import the utility function
 import { calculateAge } from '../utils/utils'; // Import the calculateAge function
+import paws from '../assets/paws.webp';
 
 export default {
   name: 'Registration',
@@ -65,7 +62,8 @@ export default {
           dob: '',
           age: '',
           knowsDob: false,
-          owner: ''
+          owner: '',
+          paws: paws
       };
   },
   watch: {

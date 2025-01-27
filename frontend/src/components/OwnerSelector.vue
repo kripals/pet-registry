@@ -1,7 +1,7 @@
 <template>
     <div>
-        <label for="owner" class="block text-sm font-medium text-gray-700">Select Owner</label>
-        <VueSelect v-model="selectedOwner" :options="owners" placeholder="Select an owner" />
+        <label for="owner" class="block text-md">Select Owner</label>
+        <VueSelect v-model="selectedOwner" :options="owners" placeholder="Select an owner" class="mt-2 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6 h-10" />
     </div>
 </template>
 

@@ -1,14 +1,18 @@
 <template>
-    <div class="mt-3">
-        <label for="breed" class="block text-sm font-medium text-gray-900">What breed are they?</label>
-        <div class="mt-2">
-            <RadioButton label="It's Purebreed" name="breed" id="purebreed" value="purebreed" v-model="selectedBreedType" />
-            <VueSelect v-if="selectedBreedType === 'purebreed'" inputId="purebreed" v-model="selected" :options="breeds" placeholder="Select an option" :is-multi="false" />
-            
-            <RadioButton label="It's Mixed" name="breed" id="mixed" value="mixed" v-model="selectedBreedType" />
-            <VueSelect v-if="selectedBreedType === 'mixed'" inputId="mixed" v-model="selected" :options="breeds" placeholder="Select an option" :is-multi="true" />
-            
-            <RadioButton label="I don't know" name="breed" id="unknown" value="unknown" v-model="selectedBreedType" />
+    <div>
+        <label for="breed" class="block text-md">What breed are they?</label>
+        <div class="mt-2 space-y-2">
+            <div>
+                <RadioButton label="It's Purebreed" name="breed" id="purebreed" value="purebreed" v-model="selectedBreedType" />
+                <VueSelect v-if="selectedBreedType === 'purebreed'" inputId="purebreed" v-model="selected" :options="breeds" placeholder="Select an option" :is-multi="false" class="p-2 ml-5" />
+            </div>
+            <div>
+                <RadioButton label="It's Mixed" name="breed" id="mixed" value="mixed" v-model="selectedBreedType" />
+                <VueSelect v-if="selectedBreedType === 'mixed'" inputId="mixed" v-model="selected" :options="breeds" placeholder="Select an option" :is-multi="true" class="p-2 ml-5" />
+            </div>
+            <div>
+                <RadioButton label="I don't know" name="breed" id="unknown" value="unknown" v-model="selectedBreedType" />
+            </div>
         </div>
     </div>
 </template>

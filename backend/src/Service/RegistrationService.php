@@ -129,7 +129,7 @@ class RegistrationService
 
         $petDetail = $registration->getPetDetail();
         $owner = $registration->getOwner();
-        $breeds = $petDetail->getPetDetailBreeds()->map(fn($breed) => $breed->getName())->toArray();
+        $breeds = $petDetail->getPetDetailBreeds()->map(fn($breed) => $breed->getBreedName())->toArray();
 
         return [
             'registration' => new RegistrationResponseDto(
@@ -148,7 +148,7 @@ class RegistrationService
             ],
             'owner' => [
                 'id' => $owner->getId(),
-                'name' => $owner->getName(),
+                'name' => $owner->getFullName(),
                 'email' => $owner->getEmail()
             ]
         ];
