@@ -2,38 +2,26 @@
 
 namespace App\Service;
 
-use App\Entity\PetDetail;
 use App\Dto\PetDetailRequestDto;
 use App\Dto\PetDetailResponseDto;
+use App\Entity\PetDetail;
+use App\Repository\PetDetailRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class PetDetailService
 {
+    private PetDetailRepository $petDetailRepository;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(PetDetailRepository $petDetailRepository, EntityManagerInterface $entityManager)
     {
+        $this->petDetailRepository = $petDetailRepository;
         $this->entityManager = $entityManager;
-    }
-
-    public function createPetDetail(PetDetailRequestDto $dto): PetDetailResponseDto
-    {
-        $petDetail = new PetDetail();
-        $petDetail->setName($dto->name);
-        $petDetail->setAge($dto->age);
-        $petDetail->setGender($dto->gender);
-        $petDetail->setDob($dto->dob ? new \DateTime($dto->dob) : null);
-
-        $this->entityManager->persist($petDetail);
-        $this->entityManager->flush();
-
-        return new PetDetailResponseDto($petDetail->getName(), $petDetail->getId(), $petDetail->getAge(), $petDetail->getGender(), $dto->dob);
     }
 
     public function getPetDetails(): array
     {
-        $petDetails = $this->entityManager->getRepository(PetDetail::class)->findAll();
-
+        $petDetails = $this->petDetailRepository->findAll();
         return array_map(
             fn(PetDetail $petDetail) => new PetDetailResponseDto(
                 $petDetail->getId(),
@@ -46,10 +34,9 @@ class PetDetailService
         );
     }
 
-    public function getPetDetail(int $id): PetDetailResponseDto
+    public function getPetDetail(int $id): ?PetDetailResponseDto
     {
-        $petDetail = $this->entityManager->getRepository(PetDetail::class)->find($id);
-
+        $petDetail = $this->petDetailRepository->find($id);
         if (!$petDetail) {
             throw new \Exception('Pet detail not found');
         }
@@ -62,19 +49,38 @@ class PetDetailService
             $petDetail->getDob()?->format('Y-m-d')
         );
     }
-    
+
+    public function createPetDetail(PetDetailRequestDto $dto): PetDetailResponseDto
+    {
+        $petDetail = new PetDetail();
+        $petDetail->setName($dto->getName());
+        $petDetail->setAge($dto->getAge());
+        $petDetail->setGender($dto->getGender());
+        $petDetail->setDob(new \DateTime($dto->getDob()));
+
+        $this->entityManager->persist($petDetail);
+        $this->entityManager->flush();
+
+        return new PetDetailResponseDto(
+            $petDetail->getId(),
+            $petDetail->getName(),
+            $petDetail->getAge(),
+            $petDetail->getGender(),
+            $petDetail->getDob()?->format('Y-m-d')
+        );
+    }
+
     public function updatePetDetail(int $id, PetDetailRequestDto $dto): PetDetailResponseDto
     {
-        $petDetail = $this->entityManager->getRepository(PetDetail::class)->find($id);
-
+        $petDetail = $this->petDetailRepository->find($id);
         if (!$petDetail) {
             throw new \Exception('Pet detail not found');
         }
 
-        $petDetail->setName($dto->name);
-        $petDetail->setAge($dto->age);
-        $petDetail->setGender($dto->gender);
-        $petDetail->setDob($dto->dob ? new \DateTime($dto->dob) : null);
+        $petDetail->setName($dto->getName());
+        $petDetail->setAge($dto->getAge());
+        $petDetail->setGender($dto->getGender());
+        $petDetail->setDob(new \DateTime($dto->getDob()));
 
         $this->entityManager->flush();
 
@@ -89,8 +95,7 @@ class PetDetailService
 
     public function deletePetDetail(int $id): void
     {
-        $petDetail = $this->entityManager->getRepository(PetDetail::class)->find($id);
-
+        $petDetail = $this->petDetailRepository->find($id);
         if (!$petDetail) {
             throw new \Exception('Pet detail not found');
         }

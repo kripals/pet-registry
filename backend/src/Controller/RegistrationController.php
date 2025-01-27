@@ -42,6 +42,20 @@ class RegistrationController extends AbstractController
     {
         try {
             $registration = $this->registrationService->getRegistration($id);
+            
+            return $this->json(['success' => true, 'data' => $registration]);
+        } catch (\Exception $e) {
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
+        }
+    }
+
+    // Get detailed registration information
+    #[Route('/api/registrations/{id}/details', name: 'get_registration_details', methods: ['GET'])]
+    public function getRegistrationDetails(int $id): JsonResponse
+    {
+        try {
+            $registration = $this->registrationService->getRegistrationDetails($id);
+
             return $this->json(['success' => true, 'data' => $registration]);
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);

@@ -11,7 +11,7 @@ export async function apiFetch(endpoint, method = 'GET', options = {}) {
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
     }
-
+    
     const response = await fetch(`${API_URL}${endpoint}`, {
         method,
         ...options,

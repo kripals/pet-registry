@@ -2,75 +2,86 @@
 
 namespace App\Service;
 
-use App\Entity\Registration;
 use App\Dto\RegistrationRequestDto;
 use App\Dto\RegistrationResponseDto;
-use App\Entity\PetDetail;
-use App\Entity\Owner;
+use App\Entity\Registration;
+use App\Repository\PetDetailRepository;
+use App\Repository\OwnerRepository;
+use App\Repository\RegistrationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class RegistrationService
 {
+    private RegistrationRepository $registrationRepository;
+    private PetDetailRepository $petDetailRepository;
+    private OwnerRepository $ownerRepository;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
-    {
+    public function __construct(
+        RegistrationRepository $registrationRepository,
+        PetDetailRepository $petDetailRepository,
+        OwnerRepository $ownerRepository,
+        EntityManagerInterface $entityManager
+    ) {
+        $this->registrationRepository = $registrationRepository;
+        $this->petDetailRepository = $petDetailRepository;
+        $this->ownerRepository = $ownerRepository;
         $this->entityManager = $entityManager;
     }
 
     // Create a registration
     public function createRegistration(RegistrationRequestDto $dto): RegistrationResponseDto
     {
-        $petDetail = $this->entityManager->getRepository(PetDetail::class)->find($dto->petDetailId);
-        $owner = $this->entityManager->getRepository(Owner::class)->find($dto->ownerId);
+        $petDetail = $this->petDetailRepository->find($dto->getPetDetailId());
+        $owner = $this->ownerRepository->find($dto->getOwnerId());
 
         if (!$petDetail || !$owner) {
             throw new \Exception('Invalid pet detail or owner ID');
         }
 
         $registration = new Registration();
-        $registration->setPetDetail($petDetail)
-            ->setOwner($owner)
-            ->setRegistrationNo($dto->registrationNo);
+        $registration->setPetDetail($petDetail);
+        $registration->setOwner($owner);
+        $registration->setRegistrationNo($dto->getRegistrationNo());
 
         $this->entityManager->persist($registration);
         $this->entityManager->flush();
 
         return new RegistrationResponseDto(
             $registration->getId(),
-            $dto->petDetailId,
-            $dto->ownerId,
-            $dto->registrationNo
+            $registration->getPetDetail()->getId(),
+            $registration->getOwner()->getId(),
+            $registration->getRegistrationNo()
         );
     }
 
     // Update a registration
     public function updateRegistration(int $id, RegistrationRequestDto $dto): RegistrationResponseDto
     {
-        $registration = $this->entityManager->getRepository(Registration::class)->find($id);
+        $registration = $this->registrationRepository->find($id);
 
         if (!$registration) {
             throw new \Exception('Registration not found');
         }
 
-        $petDetail = $this->entityManager->getRepository(PetDetail::class)->find($dto->petDetailId);
-        $owner = $this->entityManager->getRepository(Owner::class)->find($dto->ownerId);
+        $petDetail = $this->petDetailRepository->find($dto->getPetDetailId());
+        $owner = $this->ownerRepository->find($dto->getOwnerId());
 
         if (!$petDetail || !$owner) {
-            throw new \Exception('Invalid pet detail or owner ID');
+            throw new \Exception('Pet detail or owner not found');
         }
 
-        $registration->setPetDetail($petDetail)
-            ->setOwner($owner)
-            ->setRegistrationNo($dto->registrationNo);
+        $registration->setPetDetail($petDetail);
+        $registration->setOwner($owner);
+        $registration->setRegistrationNo($dto->getRegistrationNo());
 
         $this->entityManager->flush();
 
         return new RegistrationResponseDto(
             $registration->getId(),
-            $dto->petDetailId,
-            $dto->ownerId,
-            $dto->registrationNo
+            $registration->getPetDetail()->getId(),
+            $registration->getOwner()->getId(),
+            $registration->getRegistrationNo()
         );
     }
 
@@ -93,7 +104,7 @@ class RegistrationService
     // Get a registration by id
     public function getRegistration(int $id): RegistrationResponseDto
     {
-        $registration = $this->entityManager->getRepository(Registration::class)->find($id);
+        $registration = $this->registrationRepository->find($id);
 
         if (!$registration) {
             throw new \Exception('Registration not found');
@@ -107,10 +118,46 @@ class RegistrationService
         );
     }
 
+    // Get detailed registration information
+    public function getRegistrationDetails(int $id): array
+    {
+        $registration = $this->registrationRepository->find($id);
+
+        if (!$registration) {
+            throw new \Exception('Registration not found');
+        }
+
+        $petDetail = $registration->getPetDetail();
+        $owner = $registration->getOwner();
+        $breeds = $petDetail->getPetDetailBreeds()->map(fn($breed) => $breed->getName())->toArray();
+
+        return [
+            'registration' => new RegistrationResponseDto(
+                $registration->getId(),
+                $registration->getPetDetail()->getId(),
+                $registration->getOwner()->getId(),
+                $registration->getRegistrationNo()
+            ),
+            'petDetail' => [
+                'id' => $petDetail->getId(),
+                'name' => $petDetail->getName(),
+                'age' => $petDetail->getAge(),
+                'gender' => $petDetail->getGender(),
+                'dob' => $petDetail->getDob()?->format('Y-m-d'),
+                'breeds' => $breeds
+            ],
+            'owner' => [
+                'id' => $owner->getId(),
+                'name' => $owner->getName(),
+                'email' => $owner->getEmail()
+            ]
+        ];
+    }
+
     // Delete a registration
     public function deleteRegistration(int $id): void
     {
-        $registration = $this->entityManager->getRepository(Registration::class)->find($id);
+        $registration = $this->registrationRepository->find($id);
 
         if (!$registration) {
             throw new \Exception('Registration not found');

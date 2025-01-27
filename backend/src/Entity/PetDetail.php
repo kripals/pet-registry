@@ -25,8 +25,9 @@ class PetDetail
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dob = null;
-
-    #[ORM\ManyToMany(targetEntity: Breed::class, inversedBy: 'petDetails')]
+    
+    #[ORM\ManyToMany(targetEntity: "App\Entity\Breed", inversedBy: "petDetails")]
+    #[ORM\JoinTable(name: "pet_detail_breed")]
     private Collection $petDetailBreeds;
 
     public function __construct()

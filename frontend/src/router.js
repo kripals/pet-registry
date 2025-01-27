@@ -1,10 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import Registration from './components/Registration.vue';
 import Login from './components/Login.vue';
+import RegistrationView from './components/RegistrationView.vue';
 
 const routes = [
-  { path: '/', component: Registration, meta: { requiresAuth: true } },
-  { path: '/login', component: Login, meta: { requiresGuest: true } }
+  { path: '/login', component: Login, meta: { requiresGuest: true } },
+  { path: '/register', component: Registration, meta: { requiresAuth: true } },
+  { path: '/registrations/:id', component: RegistrationView, meta: { requiresAuth: true } }
 ];
 
 const router = createRouter({

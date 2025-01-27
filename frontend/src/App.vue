@@ -1,10 +1,18 @@
 <template>
-  <router-view />
+  <div>
+    <NavBar @logout="logout" />
+    <router-view />
+  </div>
 </template>
 
 <script>
+import NavBar from './components/NavBar.vue';
+
 export default {
   name: 'App',
+  components: {
+    NavBar
+  },
   methods: {
     logout() {
       localStorage.removeItem('token');

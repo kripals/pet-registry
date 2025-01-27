@@ -25,8 +25,11 @@ class OwnerController extends AbstractController
     #[Route('/api/owners', name: 'get_owners', methods: ['GET'])]
     public function getOwners(): JsonResponse
     {
-        $owners = $this->ownerService->getOwners();
-        return $this->json(['success' => true, 'data' => $owners]);
+        $owners = $this->ownerService->getAllOwners();
+        return $this->json([
+            'success' => true,
+            'data' => $owners
+        ]);
     }
 
     // Get an owner by id
@@ -35,9 +38,15 @@ class OwnerController extends AbstractController
     {
         try {
             $owner = $this->ownerService->getOwner($id);
-            return $this->json(['success' => true, 'data' => $owner]);
+            return $this->json([
+                'success' => true,
+                'data' => $owner
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_NOT_FOUND);
         }
     }
 
@@ -46,22 +55,40 @@ class OwnerController extends AbstractController
     public function createOwner(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $dto = new OwnerRequestDto($data['firstName'], $data['lastName'], $data['email'], $data['phoneNo'], $data['address'] ?? null);
 
+        if (!isset($data['name'], $data['email'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'All fields (name, email) are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $dto = new OwnerRequestDto($data['name'], $data['email'], $data['phone'] ?? null, $data['address'] ?? null, $data['birthdate'] ?? null);
         $errors = $this->validator->validate($dto);
+
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         try {
             $owner = $this->ownerService->createOwner($dto);
-            return $this->json(['success' => true, 'data' => $owner], JsonResponse::HTTP_CREATED);
+            return $this->json([
+                'success' => true,
+                'data' => $owner
+            ], JsonResponse::HTTP_CREATED);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
@@ -70,22 +97,40 @@ class OwnerController extends AbstractController
     public function updateOwner(int $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $dto = new OwnerRequestDto($data['firstName'], $data['lastName'], $data['email'], $data['phoneNo'], $data['address'] ?? null);
 
+        if (!isset($data['name'], $data['email'])) {
+            return $this->json([
+                'success' => false,
+                'error' => 'All fields (name, email) are required.'
+            ], JsonResponse::HTTP_BAD_REQUEST);
+        }
+
+        $dto = new OwnerRequestDto($data['name'], $data['email'], $data['phone'] ?? null, $data['address'] ?? null, $data['birthdate'] ?? null);
         $errors = $this->validator->validate($dto);
+
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
+
+            return $this->json([
+                'success' => false,
+                'errors' => $errorMessages
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         try {
             $owner = $this->ownerService->updateOwner($id, $dto);
-            return $this->json(['success' => true, 'data' => $owner]);
+            return $this->json([
+                'success' => true,
+                'data' => $owner
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
@@ -95,9 +140,15 @@ class OwnerController extends AbstractController
     {
         try {
             $this->ownerService->deleteOwner($id);
-            return $this->json(['success' => true, 'message' => 'Owner deleted successfully']);
+            return $this->json([
+                'success' => true,
+                'message' => 'Owner deleted successfully'
+            ]);
         } catch (\Exception $e) {
-            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 }

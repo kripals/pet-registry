@@ -2,56 +2,44 @@
 
 namespace App\Service;
 
-use App\Entity\Owner;
 use App\Dto\OwnerRequestDto;
 use App\Dto\OwnerResponseDto;
+use App\Entity\Owner;
+use App\Repository\OwnerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OwnerService
 {
+    private OwnerRepository $ownerRepository;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    public function __construct(OwnerRepository $ownerRepository, EntityManagerInterface $entityManager)
     {
+        $this->ownerRepository = $ownerRepository;
         $this->entityManager = $entityManager;
     }
 
-    public function createOwner(OwnerRequestDto $dto): OwnerResponseDto
+    public function getAllOwners(): array
     {
-        $owner = new Owner();
-        $owner->setFirstName($dto->firstName)
-            ->setLastName($dto->lastName)
-            ->setEmail($dto->email)
-            ->setPhoneNo($dto->phoneNo)
-            ->setAddress($dto->address);
-
-        $this->entityManager->persist($owner);
-        $this->entityManager->flush();
-
-        return new OwnerResponseDto($owner->getId(), $dto->firstName, $dto->lastName, $dto->email, $dto->phoneNo, $dto->address);
-    }
-
-    public function getOwners(): array
-    {
-        $owners = $this->entityManager->getRepository(Owner::class)->findAll();
-
-        return array_map(
-            fn(Owner $owner) => new OwnerResponseDto(
+        $owners = $this->ownerRepository->findAll();
+        $response = [];
+        foreach ($owners as $owner) {
+            $response[] = new OwnerResponseDto(
                 $owner->getId(),
                 $owner->getFirstName(),
                 $owner->getLastName(),
                 $owner->getEmail(),
                 $owner->getPhoneNo(),
                 $owner->getAddress()
-            ),
-            $owners
-        );
+            );
+        }
+
+        return $response;
     }
 
     public function getOwner(int $id): OwnerResponseDto
     {
-        $owner = $this->entityManager->getRepository(Owner::class)->find($id);
-
+        $owner = $this->ownerRepository->find($id);
         if (!$owner) {
             throw new \Exception('Owner not found');
         }
@@ -66,29 +54,56 @@ class OwnerService
         );
     }
 
+    public function createOwner(OwnerRequestDto $dto): OwnerResponseDto
+    {
+        $owner = new Owner();
+        $owner->setFirstName($dto->firstName);
+        $owner->setLastName($dto->lastName);
+        $owner->setEmail($dto->email);
+        $owner->setPhoneNo($dto->phoneNo);
+        $owner->setAddress($dto->address);
+
+        $this->entityManager->persist($owner);
+        $this->entityManager->flush();
+
+        return new OwnerResponseDto(
+            $owner->getId(),
+            $owner->getFirstName(),
+            $owner->getLastName(),
+            $owner->getEmail(),
+            $owner->getPhoneNo(),
+            $owner->getAddress()
+        );
+    }
+
     public function updateOwner(int $id, OwnerRequestDto $dto): OwnerResponseDto
     {
-        $owner = $this->entityManager->getRepository(Owner::class)->find($id);
-
+        $owner = $this->ownerRepository->find($id);
         if (!$owner) {
             throw new \Exception('Owner not found');
         }
 
-        $owner->setFirstName($dto->firstName)
-            ->setLastName($dto->lastName)
-            ->setEmail($dto->email)
-            ->setPhoneNo($dto->phoneNo)
-            ->setAddress($dto->address);
+        $owner->setFirstName($dto->firstName);
+        $owner->setLastName($dto->lastName);
+        $owner->setEmail($dto->email);
+        $owner->setPhoneNo($dto->phoneNo);
+        $owner->setAddress($dto->address);
 
         $this->entityManager->flush();
 
-        return new OwnerResponseDto($owner->getId(), $dto->firstName, $dto->lastName, $dto->email, $dto->phoneNo, $dto->address);
+        return new OwnerResponseDto(
+            $owner->getId(),
+            $owner->getFirstName(),
+            $owner->getLastName(),
+            $owner->getEmail(),
+            $owner->getPhoneNo(),
+            $owner->getAddress()
+        );
     }
 
     public function deleteOwner(int $id): void
     {
-        $owner = $this->entityManager->getRepository(Owner::class)->find($id);
-
+        $owner = $this->ownerRepository->find($id);
         if (!$owner) {
             throw new \Exception('Owner not found');
         }

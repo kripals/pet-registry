@@ -25,8 +25,8 @@ class Breed
     #[ORM\JoinColumn(nullable: false)]
     private PetType $petType;
 
-    #[ORM\ManyToMany(targetEntity: PetDetail::class, mappedBy: 'petDetailBreeds')]
-    private Collection $petDetails;
+    #[ORM\ManyToMany(targetEntity: "App\Entity\PetDetail", mappedBy: "petDetailBreeds")]
+    private $petDetails;
 
     public function __construct()
     {

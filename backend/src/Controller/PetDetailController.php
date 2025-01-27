@@ -65,52 +65,22 @@ class PetDetailController extends AbstractController
     public function createPetDetail(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['breedId'], $data['ownerId']);
 
-        if (!isset($data['age'], $data['gender'])) {
-            return $this->json([
-                'success' => false,
-                'error' => 'Fields "age" and "gender" are required.'
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['gender'], $data['dob'] ?? null);
         $errors = $this->validator->validate($dto);
-
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-
-            return $this->json([
-                'success' => false,
-                'errors' => $errorMessages
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         try {
             $petDetail = $this->petDetailService->createPetDetail($dto);
-
-            if (isset($data['breeds']) && is_array($data['breeds'])) {
-                try {
-                    $this->petBreedService->createPetBreeds($petDetail->getId(), $data['breeds']);
-                } catch (\Exception $e) {
-                return $this->json([
-                    'success' => false,
-                    'error' => $e->getMessage()
-                ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-                }
-            }
-
-            return $this->json([
-                'success' => true,
-                'data' => $petDetail
-            ], JsonResponse::HTTP_CREATED);
+            return $this->json(['success' => true, 'data' => $petDetail], JsonResponse::HTTP_CREATED);
         } catch (\Exception $e) {
-            return $this->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
@@ -119,51 +89,22 @@ class PetDetailController extends AbstractController
     public function updatePetDetail(int $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['breedId'], $data['ownerId']);
 
-        if (!isset($data['age'], $data['gender'])) {
-            return $this->json([
-                'success' => false,
-                'error' => 'Fields "age" and "gender" are required.'
-            ], JsonResponse::HTTP_BAD_REQUEST);
-        }
-
-        $dto = new PetDetailRequestDto($data['name'], $data['age'], $data['gender'], $data['dob'] ?? null);
         $errors = $this->validator->validate($dto);
-
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-
-            return $this->json([
-                'success' => false,
-                'errors' => $errorMessages
-            ], JsonResponse::HTTP_BAD_REQUEST);
+            return $this->json(['success' => false, 'errors' => $errorMessages], JsonResponse::HTTP_BAD_REQUEST);
         }
 
         try {
             $petDetail = $this->petDetailService->updatePetDetail($id, $dto);
-
-            if (isset($data['breeds']) && is_array($data['breeds'])) {
-                try {
-                    $this->petBreedService->createPetBreeds($petDetail->getId(), $data['breeds']);
-                } catch (\Exception $e) {
-                    return $this->json([
-                        'success' => false,
-                        'error' => $e->getMessage()
-                    ], JsonResponse::HTTP_INTERNAL_SERVER_ERROR);
-                }
-            }
-            return $this->json([
-                'success' => true,
-                'data' => $petDetail
-            ]);
+            return $this->json(['success' => true, 'data' => $petDetail]);
         } catch (\Exception $e) {
-            return $this->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_BAD_REQUEST);
         }
     }
 
@@ -173,15 +114,9 @@ class PetDetailController extends AbstractController
     {
         try {
             $this->petDetailService->deletePetDetail($id);
-            return $this->json([
-                'success' => true,
-                'message' => 'Pet detail deleted successfully.'
-            ]);
+            return $this->json(['success' => true, 'message' => 'Pet detail deleted successfully']);
         } catch (\Exception $e) {
-            return $this->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], JsonResponse::HTTP_NOT_FOUND);
+            return $this->json(['success' => false, 'error' => $e->getMessage()], JsonResponse::HTTP_NOT_FOUND);
         }
     }
 }

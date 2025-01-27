@@ -34,4 +34,28 @@ class OwnerRequestDto
         $this->phoneNo = $phoneNo;
         $this->address = $address;
     }
+
+    public function getFirstName(): string
+    {
+        return $this->firstName;
+    }
+    public function getLastName(): string
+    {
+        return $this->lastName;
+    }
+
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    public function getPhoneNo(): string
+    {
+        return $this->phoneNo;
+    }
+
+    public function getAddress(): ?string
+    {
+        return $this->address;
+    }
 }

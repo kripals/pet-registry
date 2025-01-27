@@ -1,6 +1,5 @@
 <template>
   <div class="bg-gray-100 h-screen">
-    <MainHeader @logout="logout" />
     <div class="mt-10 lg:w-1/2 w-full mx-auto px-4">
       <div class="divide-y divide-gray-200 overflow-hidden rounded-lg bg-white shadow">
         <div class="px-4 py-5 sm:px-8">
@@ -15,14 +14,16 @@
             <DogNameInput v-model="name" />
             <BreedSelector v-model="breed" />
             <GenderSelector v-model="gender" />
+
             <div class="mt-4">
-              <label for="dob" class="block text-sm font-medium text-gray-700">Date of Birth</label>
-              <input type="date" id="dob" v-model="dob" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+              <label class="block text-sm font-medium text-gray-700">
+                <input type="checkbox" v-model="knowsDob" @change="toggleDobField" />
+                I know my dog's date of birth
+              </label>
             </div>
-            <div class="mt-4">
-              <label for="age" class="block text-sm font-medium text-gray-700">Age</label>
-              <input type="text" id="age" v-model="age" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" readonly />
-            </div>
+            <DateInput id="dob" label="Date of Birth" v-model="dob" :disabled="!knowsDob" />
+            <NumberInput id="age" label="Approximate Age" v-model="age" :min="0" />
+            
             <OwnerSelector v-model="owner" />
             <SubmitButton label="Continue" />
           </form>
@@ -39,6 +40,8 @@ import BreedSelector from "./BreedSelector.vue";
 import GenderSelector from "./GenderSelector.vue";
 import OwnerSelector from "./OwnerSelector.vue";
 import SubmitButton from "./common/SubmitButton.vue";
+import DateInput from "./common/DateInput.vue";
+import NumberInput from "./common/NumberInput.vue";
 import { apiFetch } from '../utils/api'; // Import the utility function
 import { calculateAge } from '../utils/utils'; // Import the calculateAge function
 
@@ -50,7 +53,9 @@ export default {
       BreedSelector,
       GenderSelector,
       OwnerSelector,
-      SubmitButton
+      SubmitButton,
+      DateInput,
+      NumberInput
   },
   data() {
       return {
@@ -59,22 +64,30 @@ export default {
           gender: '',
           dob: '',
           age: '',
+          knowsDob: false,
           owner: ''
       };
   },
   watch: {
       dob(newDob) {
-          this.age = calculateAge(newDob);
+          if (this.knowsDob) {
+              this.age = calculateAge(newDob);
+          }
       }
   },
   methods: {
+      toggleDobField() {
+          if (!this.knowsDob) {
+              this.dob = '';
+          }
+      },
       async registerPet() {
           try {
               const petDetailData = {
                   name: this.name,
                   age: this.age,
                   gender: this.gender,
-                  dob: this.dob
+                  dob: this.knowsDob ? this.dob : null
               };
 
               const registrationData = {
@@ -92,7 +105,7 @@ export default {
 
               if (response) {
                   alert('Registration successful!');
-                  // Handle successful registration (e.g., redirect to another page)
+                  this.$router.push(`/registrations/${response.id}/details`);
               }
           } catch (error) {
               console.error('Error registering dog:', error);

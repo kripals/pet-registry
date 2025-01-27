@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Dto\BreedRequestDto;
-use App\Dto\BreedResponseDto;
 use App\Service\BreedService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -117,29 +116,29 @@ final class BreedController extends AbstractController
     public function updateBreed(int $id, Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
+    
         if (!isset($data['breed_name'], $data['is_dangerous'], $data['pet_type_id'])) {
             return $this->json([
                 'success' => false,
                 'error' => 'All fields (breed_name, is_dangerous, pet_type_id) are required.'
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
-
+    
         $dto = new BreedRequestDto($data['breed_name'], $data['is_dangerous'], $data['pet_type_id']);
         $errors = $this->validator->validate($dto);
-
+    
         if (count($errors) > 0) {
             $errorMessages = [];
             foreach ($errors as $error) {
                 $errorMessages[] = $error->getMessage();
             }
-
+    
             return $this->json([
                 'success' => false,
                 'errors' => $errorMessages
             ], JsonResponse::HTTP_BAD_REQUEST);
         }
-
+    
         try {
             $breed = $this->breedService->updateBreed($id, $dto);
             return $this->json([

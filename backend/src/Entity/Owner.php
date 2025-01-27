@@ -55,6 +55,11 @@ class Owner
         return $this;
     }
 
+    public function getFullName(): string
+    {
+        return $this->firstName . ' ' . $this->lastName;
+    }
+
     public function getEmail(): string
     {
         return $this->email;
